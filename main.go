@@ -51,6 +51,6 @@ func broadcastMessage(message []byte) {
 
 func main() {
 	http.HandleFunc("/ws", handleWebSocket)
-	http.Handle("/", http.FileServer(http.Dir("public")))
+	http.Handle("/", http.FileServer(http.Dir("dist")))
 	http.ListenAndServe(":8080", nil)
 }

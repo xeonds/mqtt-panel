@@ -1,29 +1,22 @@
 <template>
-    <div id="main" :options="option" :data="data" />
+  <div id="main" :options="option" :data="data"></div>
 </template>
 
 <script lang="ts" setup>
 import * as echarts from 'echarts';
-import { defineProps } from "vue";
-import {onMounted} from 'vue';
+import { onMounted } from 'vue';
+
 const props = defineProps({
-    title: {
-        type: String,
-        default: "观测数据",
-    },
-    data: [Array, Object],
+  title: {
+    type: String,
+    default: "观测数据",
+  },
+  data: [Array, Object],
+  option: {
+    type: Object,
+    default: () => { return { xAxis: { type: "time", } } }
+  }
 });
-const randomData = ()=>{
-  let now = new Date(+now + oneDay);
-  let value = value + Math.random() * 21 - 10;
-  return {
-    name: now.toString(),
-    value: [
-      [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'),
-      Math.round(value)
-    ]
-  };
-}
 
 onMounted(() => {
   var chartDom = document.getElementById("main")!;
@@ -66,7 +59,7 @@ onMounted(() => {
 
 <style lang="less" scoped>
 #main {
-    height: 24rem;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
 </style>

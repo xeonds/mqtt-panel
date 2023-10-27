@@ -11,8 +11,10 @@ Vite+Vue3+EChart.js+TypeScript
 ## 构建&部署
 
 ```bash
-pnpm i && pnpm build
+# 前端
+pnpm i && vite build
+# 后端
+go mod tidy && go build
 ```
 
-构建生成的网页位于`dist/`，直接部署到静态文件服务器即可。
-
+构建完成后，直接启动`mqtt-server`即可。

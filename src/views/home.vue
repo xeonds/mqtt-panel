@@ -1,9 +1,8 @@
 <template>
   <div>
     <h1>Vue WebSocket Example</h1>
-    <lineChart :data="data" />
-    <p>Status: {{ status }}</p>
-    <p>Data: {{ data }}</p>
+    <lineChart style="height: 24rem; width: 100%;" :title="'传感器观测数据'" :data="data" />
+    <p>Status: {{ isConn?'已连接':'未连接' }}</p>
   </div>
 </template>
 
@@ -12,14 +11,22 @@ import lineChart from '../components/line-chart.vue'
 import { ref, onMounted } from 'vue';
 
 const data = ref([]); // 用于存储ECharts数据
-const status = ref([]); // 用于存储ECharts数据
+const isConn = ref(false);
+const socket = new WebSocket('/ws');
 
 const initializeWebSocket = () => {
-  const socket = new WebSocket('/ws');
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    data.value = data;
-  };
+  socket.addEventListener('open', () => {
+    isConn.value = true;
+  });
+
+  socket.addEventListener('close', () => {
+    isConn.value = false;
+  });
+
+  socket.addEventListener('message', (event) => {
+    const message = event.data;
+    console.log('Received message:', message);
+  });
 };
 
 onMounted(() => {
