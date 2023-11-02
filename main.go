@@ -37,6 +37,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		if messageType == websocket.TextMessage {
 			broadcastMessage(p)
 		}
+		broadcastMessage([]byte("Received: 114514"))
 	}
 }
 

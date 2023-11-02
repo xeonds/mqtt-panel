@@ -10,22 +10,25 @@
 import lineChart from '../components/line-chart.vue'
 import { ref, onMounted } from 'vue';
 
-const data = ref([]); // 用于存储ECharts数据
+const data = ref(<any>[]);
 const isConn = ref(false);
-const socket = new WebSocket('/ws');
+const socket = new WebSocket('ws://localhost:8080/ws');
 
 const initializeWebSocket = () => {
   socket.addEventListener('open', () => {
     isConn.value = true;
+    console.log('connected')
   });
 
   socket.addEventListener('close', () => {
     isConn.value = false;
+    console.log('disconnected')
   });
 
   socket.addEventListener('message', (event) => {
     const message = event.data;
-    console.log('Received message:', message);
+    console.log(message)
+    data.value.push(JSON.parse(message));
   });
 };
 
