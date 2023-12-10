@@ -3,6 +3,7 @@
     <h1>Vue WebSocket Example</h1>
     <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
     <p>服务端连接状态: {{ isConn ? '已连接' : '未连接' }}</p>
+    <el-button type="priamary" @click="exportData">Export Data</el-button>
   </div>
 </template>
 
@@ -30,7 +31,7 @@ export default {
       this.chart = echarts.init(document.getElementById('main'));
     },
     drawChart() {
-      let option= {
+      let option = {
         title: { text: '传感器观测数据' },
         tooltip: {},
         legend: {
@@ -63,10 +64,28 @@ export default {
       });
       this.socket.addEventListener('message', (event) => {
         const [value, timestamp] = event.data.split(',');
-        this.time.push(timestamp)
-        this.volts1.push(value)
+        this.borderPush(this.time, timestamp);
+        this.borderPush(this.volts1, value);
         this.drawChart()
       });
+    },
+    borderPush(data, value) {
+      if (data.length > 100) data.shift();
+      data.push(value)
+    },
+    exportData() {
+      const data = {
+        time: this.time,
+        volts1: this.volts1,
+      }
+      const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = "data.json";
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
   }
 }
