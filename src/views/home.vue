@@ -3,7 +3,7 @@
     <h1>Vue WebSocket Example</h1>
     <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
     <p>服务端连接状态: {{ isConn ? '已连接' : '未连接' }}</p>
-    <el-button type="priamary" @click="exportData">Export Data</el-button>
+    <el-button type="priamary" @click="exportData">导出数据</el-button>
   </div>
 </template>
 
@@ -17,6 +17,7 @@ export default {
       socket: null,
       addr: 'ws://192.168.2.219/ws',
       time: [],
+      _time: 1,
       volts1: [],
       isConn: false,
     }
@@ -29,6 +30,7 @@ export default {
   methods: {
     initChart() {
       this.chart = echarts.init(document.getElementById('main'));
+      this._time = 1
     },
     drawChart() {
       let option = {
@@ -63,8 +65,8 @@ export default {
         console.log('disconnected')
       });
       this.socket.addEventListener('message', (event) => {
-        const [value, timestamp] = event.data.split(',');
-        this.borderPush(this.time, timestamp);
+        const [value] = event.data.split(',');
+        this.borderPush(this.time, this._time++);
         this.borderPush(this.volts1, value);
         this.drawChart()
       });
