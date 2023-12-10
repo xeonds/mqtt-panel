@@ -14,7 +14,7 @@ const char* ssid = "你的WiFi名称";
 const char* password = "你的WiFi密码";
 
 String message = "你好，这是一个测试消息";
-String target_ip = "192.168.1.100";
+String target_ip = "192.168.2.219";
 int target_port = 80;
 
 WebSocketsClient webSocket;
@@ -25,18 +25,15 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       Serial.println("WebSocket连接断开");
       break;
     case WStype_CONNECTED: // 连接成功时触发
-      Serial.println("WebSocket连接成功");
-      // 发送字符串到服务器
+      Serial.println("WebSocket连接成功"); // 发送字符串到服务器
       webSocket.sendTXT(message);
       break;
     case WStype_TEXT: // 收到文本消息时触发
-      Serial.println("收到文本消息：");
-      // 打印收到的消息内容
+      Serial.println("收到文本消息："); // 打印收到的消息内容
       Serial.println(String((char *)payload));
       break;
     case WStype_BIN: // 收到二进制消息时触发
-      Serial.println("收到二进制消息，长度：");
-      // 打印收到的消息长度
+      Serial.println("收到二进制消息，长度："); // 打印收到的消息长度
       Serial.println(length);
       break;
   }
@@ -60,7 +57,7 @@ void setup() {
     Serial.print("已连接WiFi，本机IP地址为：");
     Serial.println(WiFi.localIP());
     webSocket.onEvent(webSocketEvent);
-    webSocket.begin(target_ip, target_port, "/");
+    webSocket.begin(target_ip, target_port, "/ws");
 }
 
 
@@ -90,24 +87,9 @@ void loop() {
         Serial.println(signal);
         volts1=signal;
         char buffer[32];
-        sprintf(buffer, "%.2f,", value);
+        sprintf(buffer, "%.2f,",volts1);
         sprintf(buffer + strlen(buffer) , "%lu,", millis());
-        WebSocket.sendTXT(buffer);
-        /* float voltage = 0.0;
-           float voltage1 = 0.0;
-           voltage = readChannel(ADS1115_COMP_0_GND);
-
-           static unsigned long past = 0;
-           unsigned long present = micros();
-           unsigned long interval = present - past;
-           past = present;
-
-        // Run timer
-        static long timer = 0;
-        timer -= interval;
-        if(timer < 0){
-        timer += 1000000 / SAMPLE_RATE;
-        float voltage1 = ECGFilter(voltage);*/
+        webSocket.sendTXT(buffer);
     }
 }
 

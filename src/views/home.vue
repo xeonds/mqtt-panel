@@ -1,38 +1,73 @@
 <template>
   <div>
     <h1>Vue WebSocket Example</h1>
-    <lineChart style="height: 24rem; width: 100%;" :title="'传感器观测数据'" :data="data" />
-    <p>Status: {{ isConn?'已连接':'未连接' }}</p>
+    <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
+    <p>服务端连接状态: {{ isConn ? '已连接' : '未连接' }}</p>
   </div>
 </template>
 
-<script setup lang="ts">
-import lineChart from '../components/line-chart.vue'
+<script>
 import { ref, onMounted } from 'vue';
-
-const data = ref(<any>[]);
-const isConn = ref(false);
-const socket = new WebSocket('ws://localhost:8080/ws');
-
-const initializeWebSocket = () => {
-  socket.addEventListener('open', () => {
-    isConn.value = true;
-    console.log('connected')
-  });
-
-  socket.addEventListener('close', () => {
-    isConn.value = false;
-    console.log('disconnected')
-  });
-
-  socket.addEventListener('message', (event) => {
-    const message = event.data;
-    console.log(message)
-    data.value.push(JSON.parse(message));
-  });
-};
-
-onMounted(() => {
-  initializeWebSocket();
-});
+import * as echarts from 'echarts';
+export default {
+  data() {
+    return {
+      chart: null,
+      socket: null,
+      addr: 'ws://192.168.2.219/ws',
+      time: [],
+      volts1: [],
+      isConn: false,
+    }
+  },
+  mounted() {
+    this.initChart()
+    this.drawChart()
+    this.initWebSocket();
+  },
+  methods: {
+    initChart() {
+      this.chart = echarts.init(document.getElementById('main'));
+    },
+    drawChart() {
+      let option= {
+        title: { text: '传感器观测数据' },
+        tooltip: {},
+        legend: {
+          data: ["电压1"]
+        },
+        xAxis: {
+          data: this.time,
+          boundaryGap: false,
+        },
+        yAxis: {},
+        series: [
+          {
+            name: "电压1",
+            type: "line",
+            data: this.volts1
+          },
+        ],
+      }
+      this.chart.setOption(option);
+    },
+    initWebSocket() {
+      this.socket = new WebSocket(this.addr);
+      this.socket.addEventListener('open', () => {
+        this.isConn = true;
+        console.log('connected')
+      });
+      this.socket.addEventListener('close', () => {
+        this.isConn = false;
+        console.log('disconnected')
+      });
+      this.socket.addEventListener('message', (event) => {
+        const [value, timestamp] = event.data.split(',');
+        this.time.push(timestamp)
+        this.volts1.push(value)
+        this.drawChart()
+      });
+    }
+  }
+}
 </script>

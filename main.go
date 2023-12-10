@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -36,8 +37,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 		if messageType == websocket.TextMessage {
 			broadcastMessage(p)
+			log.Println("forwarding message: " + string(p))
 		}
-		broadcastMessage([]byte("Received: 114514"))
 	}
 }
 
@@ -53,5 +54,5 @@ func broadcastMessage(message []byte) {
 func main() {
 	http.HandleFunc("/ws", handleWebSocket)
 	http.Handle("/", http.FileServer(http.Dir("dist")))
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":80", nil)
 }
