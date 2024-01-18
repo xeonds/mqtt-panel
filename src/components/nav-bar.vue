@@ -24,8 +24,9 @@ import { useRouter } from "vue-router";
 
 const router=useRouter();
 const cateList: any = ref([
-    {name: "Home", id: "/"},
-    {name: "Control", id: "/control"}
+    {name: "原主页", id: "/"},
+    {name: "开发中主页", id: "/new"},
+    {name: "控制面板", id: "/control"}
 ]);
 const activeIndex = ref("0");
 

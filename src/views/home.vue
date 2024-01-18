@@ -1,9 +1,10 @@
 <template>
   <div>
-    <h1>Vue WebSocket Example</h1>
-    <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
+    <h1>监控面板</h1>
     <p>服务端连接状态: {{ isConn ? '已连接' : '未连接' }}</p>
     <el-button type="priamary" @click="exportData">导出数据</el-button>
+    <el-divider />
+    <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
   </div>
 </template>
 

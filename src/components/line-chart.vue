@@ -1,11 +1,19 @@
 <template>
-  <div id="main" :options="option" :data="data"></div>
+  <div>
+    <h2>{{ props.title }}</h2>
+    <div id="main" style="height: 24rem; width: 100%;" :option="drawChart"></div>
+  </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
-
+// data
+const chart = ref();
+const time = ref([]);
+const _time = ref(1);
+const volts1 = ref([]);
+// props
 const props = defineProps({
   title: {
     type: String,
@@ -17,49 +25,59 @@ const props = defineProps({
     default: () => { return { xAxis: { type: "time", } } }
   }
 });
-
 onMounted(() => {
-  var chartDom = document.getElementById("main")!;
-  var myChart = echarts.init(chartDom);
-  var option = {
-    title: {
-      text: props.title,
-    },
-    tooltip: {
-      trigger: "axis",
-    },
+  initChart()
+  drawChart()
+})
+const initChart = () => {
+  chart.value = echarts.init(document.getElementById('main'));
+  _time.value = 1
+}
+const drawChart =() => {
+  let option = {
+    title: { text: '传感器观测数据' },
+    tooltip: {},
     legend: {
-      data: ["压力"],
+      data: ["电压1"]
     },
     xAxis: {
-      type: "time",
-      splitLine: {
-        show: false
-      }
+      data: time.value,
+      boundaryGap: false,
     },
-    yAxis: {
-      type: "value",
-      boundaryGap: [0, '100%'],
-      splitLine: {
-        show: false
-      }
-    },
+    yAxis: {},
     series: [
       {
-        name: "压力传感器1",
+        name: "电压1",
         type: "line",
-        showSymbol: false,
-        data: props.data || [5, 20, 36, 10, 10, 20]
+        data: volts1.value
       },
     ],
-  };
-  myChart.setOption(option);
-});
+  }
+  chart.value.setOption(option);
+}
+const borderPush = (data:any, value:any) => {
+  if (data.length > 100) data.shift();
+  data.push(value)
+}
+const exportData = (time: any, volts: any) => {
+  const data = {
+    time: time.value,
+    ...volts.value
+  }
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = "data.json";
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 </script>
-
 <style lang="less" scoped>
 #main {
   height: 100%;
   width: 100%;
 }
 </style>
+
