@@ -3,7 +3,7 @@ BINDIR=bin
 VERSION=0.1.0
 BUILDTIME=$(shell date -u)
 GOBUILD=go build -ldflags '-X "main.version=$(VERSION)" -X "main.buildTime=$(BUILDTIME)"'
-FRONTBUILD=pnpm i && pnpm run build --outDir=bin/dist
+FRONTBUILD=pnpm i && vite build --outDir=bin/dist
 
 PLATFORM_LIST = \
 	darwin-amd64 \

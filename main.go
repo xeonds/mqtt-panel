@@ -54,5 +54,5 @@ func broadcastMessage(message []byte) {
 func main() {
 	http.HandleFunc("/ws", handleWebSocket)
 	http.Handle("/", http.FileServer(http.Dir("dist")))
-	http.ListenAndServe(":80", nil)
+    panic(http.ListenAndServe(":8765", nil))
 }
