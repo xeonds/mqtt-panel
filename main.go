@@ -7,52 +7,39 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-type Client struct {
-	conn *websocket.Conn
-}
-
-var clients = make(map[*Client]bool)
-
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	client := &Client{conn: conn}
-	clients[client] = true
-
-	for {
-		messageType, p, err := conn.ReadMessage()
+func handleWebSocket(srcConns, dstConns map[*websocket.Conn]bool) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		srcConn, err := (&websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		}).Upgrade(w, r, nil)
 		if err != nil {
-			delete(clients, client)
 			return
 		}
-		if messageType == websocket.TextMessage {
-			broadcastMessage(p)
-			log.Println("forwarding message: " + string(p))
-		}
-	}
-}
-
-func broadcastMessage(message []byte) {
-	for client := range clients {
-		err := client.conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			delete(clients, client)
+		defer srcConn.Close()
+		srcConns[srcConn] = true
+		for {
+			messageType, p, err := srcConn.ReadMessage()
+			if err != nil {
+				delete(srcConns, srcConn)
+				return
+			} else if messageType == websocket.TextMessage {
+				for dstConn := range dstConns {
+					if err := dstConn.WriteMessage(websocket.TextMessage, p); err != nil {
+						delete(dstConns, dstConn)
+					}
+				}
+				log.Println("Forwarding message: " + string(p))
+			}
 		}
 	}
 }
 
 func main() {
-	http.HandleFunc("/ws", handleWebSocket)
+	// 简单的服务端：将来自某个客户端的信息广播出去
+	var conns = make(map[*websocket.Conn]bool)
+	http.HandleFunc("/ws", handleWebSocket(conns, conns))
 	http.Handle("/", http.FileServer(http.Dir("dist")))
-    panic(http.ListenAndServe(":8765", nil))
+	panic(http.ListenAndServe(":8765", nil))
 }
