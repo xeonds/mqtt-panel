@@ -29,7 +29,7 @@ export default {
       chart3: null,
       chart4: null,
       socket: null,
-      addr: 'ws://ray.al:8765/ws',
+      addr: 'ws://123.56.246.71:8765/ws',
       time: [],
       _time: 1,
       volts1: [],
@@ -148,7 +148,7 @@ export default {
         console.log('disconnected')
       });
       this.socket.addEventListener('message', (event) => {
-        const [value] = event.data.split(',');
+        const value = event.data.split(',');
         this.borderPush(this.time, this._time++);
         this.borderPush(this.volts1, value[0]);
         this.borderPush(this.volts2, value[1]);

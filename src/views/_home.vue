@@ -22,7 +22,7 @@ import { ref, onMounted } from 'vue';
 import * as echarts from 'echarts';
 // socket接口部分，根据服务器地址协商修改
 const socket = ref();
-const addr = ref('ws://ray.al/ws');
+const addr = ref('ws://123.56.246.71/ws');
 const isConn = ref(false);
 // 四个统计图的控制对象
 const chart1 = ref();

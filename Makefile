@@ -15,8 +15,14 @@ PLATFORM_LIST = \
 
 all: frontend linux-amd64
 
+release:
+	tar -zcvf $(NAME)-release.tar.gz $(BINDIR)/
+
 frontend:
 	$(FRONTBUILD)
+
+windows-amd64: 
+	GOARCH=amd64 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe
 
 linux-amd64:
 	GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@-$(VERSION)
