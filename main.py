@@ -1,8 +1,14 @@
-import time,ujson,network
+import time,ujson,network,ure
+import usocket as socket
 import dht
 import machine
 from umqtt.simple import MQTTClient
 from machine import ADC, Pin
+
+
+
+DEBUG = True
+period = 2                          # 数据发送间隔，单位：秒
 
 # 定义颜色
 BLACK = (0,0,0)
@@ -35,10 +41,9 @@ keepalive   = 60
 wifi_ssid   = 'Vintage'
 wifi_passwd = ''
 
-
 clientId    = "EC800"                                                 # 设备ID
 username    = "0KuShP5G6J"                                          # 产品ID
-passwd      = "version=2018-10-31&res=products%2FtG1T8EU4T9%2Fdevices%2F0KuShP5G6J&et=1709385180&method=md5&sign=DlFfoUg%2B6vx3xmWOLrBXqQ%3D%3D"  # token
+passwd      = "version=2018-10-31&res=products%2F0KuShP5G6J&et=1709647663&method=sha1&sign=AVp4eZ4dK8xKSfcx4alxHgkx5K4%3D"  # token
 ######################################################################################
 mqttHostUrl = "mqtts.heclouds.com"                                  # 服务器地址,不用改
 port        = 1883                                                  # 服务器端口,不用改
@@ -52,13 +57,14 @@ topic_subscribe       = topic_subscribe.replace('${clientId}', clientId)
 uart = machine.UART(1, tx=1, rx=2, baudrate=115200)
 
 def send_at_command(command):
-    print("Send->", command)
+    if DEBUG: print("Send->", command)
     uart.write(command + '\r\n')
     time.sleep(1)
     response = uart.read()
-    if response: print("Rev:", response.decode('utf-8'))
-    else: print("No response")
-    return response.decode("utf-8")
+    if DEBUG:
+        if response: print("Recv:", response.decode('utf-8'))
+        else: print("No response")
+    return response.decode("utf-8") if response else response
 
 # ADC数据读取函数
 def get_adc_value():
@@ -74,10 +80,7 @@ def init_sensor():
     EC_RST.value(1)                             # 重置EC传感器
     time.sleep(1)
     EC_RST.value(0)
-
     # 初始化GNSS模块
-    send_at_command("AT+QGPS=1")
-    
     LED1.value(0)                               #跑马灯
     LED2.value(0)
     LED3.value(0)
@@ -87,7 +90,11 @@ def init_sensor():
     time.sleep(0.5)
     LED3.value(1)
     time.sleep(0.5)
-    
+
+def init_gps():
+    send_at_command('AT+QGPSCFG="outport","uartdebug"')
+    send_at_command('AT+QGPS=1')
+
 # 按键读取函数
 def read_buttons():
     button1_state = button1.value()
@@ -115,6 +122,20 @@ def receiveMessage(topic_subscribe, msg):
     message = ujson.loads(msg)
     data = message["params"]
 
+def gps_to_onegps(input_string):
+    pattern = r'(\d+\.\d+)([NS]),(\d+\.\d+)([EW])'
+    match = ure.search(pattern, input_string)
+    if match:
+        lon, lat = float(match.group(1)), float(match.group(3))
+        lon, lat = lon / 100 + (lon % 100)/60, lat/100 + (lat%100)/60
+        if match.group(4) == 'W': lon = -lon
+        if match.group(2) == 'S': lat = -lat
+        return {"lat": lon, "lon": lat}	# 经纬度记反了
+    else: return {"lat": 0, "lon": 0}
+
+def get_gps_info():
+    return send_at_command("AT+QGPSLOC=0")
+
 def main():
     init_sensor()
     # 开始连接WIFI
@@ -134,16 +155,14 @@ def main():
 
     # 连接OneNet
     client = MQTTClient(clientId, mqttHostUrl, port, username, passwd, keepalive)
-    try: client.connect()
-    except(e): 
-        print("[OneNet Init] Initialization failed: " + e)
-        return
+    client.connect()
     client.set_callback(receiveMessage)
     time.sleep(1)
     print('MQTT connection succeeded!')
     
-    def get_gps_info():
-        return send_at_command("AT+QGPSLOC=0")
+    init_gps()
+    time.sleep(1)
+    print('GPS initial succeeded!')
 
     while True:
         try:
@@ -154,7 +173,8 @@ def main():
             humidity = d.humidity()                 # 获取湿度值
             Value1,Value2 = get_adc_value()         # 读取两路ADC的值
             gps_data = get_gps_info()               # 读取GPS信息
-
+            if not gps_data: continue               # 等待位置传感器初始化
+            # if DEBUG: print(gps_data)
             byte_msg = ujson.dumps({
                 "id":"1697011901539",
                 "version":"1.0",
@@ -163,13 +183,12 @@ def main():
                 "ADC_value2":{"value":Value2},
                 "temperature":{"value":temperature},
                 "humidity":{"value":humidity},
-                "location":{"value":gps_data}
+                "location":{"value":gps_to_onegps(gps_data)}
             }}).encode('ascii')
-
-            print(byte_msg)
-            # 发布消息到云平台
+            if DEBUG: print(byte_msg)
             client.publish(topic_publish, msg=byte_msg)
             client.check_msg()
+            time.sleep(period)
         except OSError as e:
             print('OSError:', e)
 
