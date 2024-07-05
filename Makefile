@@ -27,3 +27,8 @@ env:
 
 tty:
 	screen /dev/ttyUSB0 115200
+
+flash:
+	@export AMPY_PORT=/dev/ttyUSB0
+	ampy put src/esp32/main.py
+	ampy put src/esp32/boot.py
