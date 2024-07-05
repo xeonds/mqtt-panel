@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  mqtt-panel:
+    image: ubuntu:latest
+    working_dir: /app
+    volumes:
+      - ./build/mqtt-panel-linux-amd64:/app/mqtt-panel-linux-amd64
+      - ./build/dist:/app/dist
+    ports:
+      - "8765:8765"
+    command: ["./mqtt-panel-linux-amd64"]
+

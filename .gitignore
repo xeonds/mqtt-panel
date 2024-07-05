@@ -26,3 +26,4 @@ mqtt-server
 
 #  dir
 /bin/
+/build/

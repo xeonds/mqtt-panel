@@ -38,8 +38,8 @@ topic_subscribe     = '$sys/${username}/${clientId}/thing/property/set'
 keepalive   = 60
 #######################下面就是需要修改的地方##########################################
 # 修改为自己手机热点的名称和密码，尽量不要出现中文
-wifi_ssid   = 'Vintage'
-wifi_passwd = ''
+wifi_ssid   = 'x-station'
+wifi_passwd = '0.0.0.0.'
 
 clientId    = "EC800"                                                 # 设备ID
 username    = "0KuShP5G6J"                                          # 产品ID
@@ -61,10 +61,11 @@ def send_at_command(command):
     uart.write(command + '\r\n')
     time.sleep(1)
     response = uart.read()
-    if DEBUG:
-        if response: print("Recv:", response.decode('utf-8'))
-        else: print("No response")
-    return response.decode("utf-8") if response else response
+    if response: 
+        print("Rev:", response.decode('utf-8'))
+        return response.decode("utf-8")
+    else: print("No response")
+    return ''
 
 # ADC数据读取函数
 def get_adc_value():
